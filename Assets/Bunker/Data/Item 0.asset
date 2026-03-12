@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1976db12f7f5e184d99f59f766740f84, type: 3}
+  m_Name: Item 0
+  m_EditorClassIdentifier: 
+  itemType: 0
+  itemId: 0
+  itemName: Oribital Blade
+  itemDesc: "\uB370\uBBF8\uC9C0 {0}% \uC99D\uAC00\n\uD68C\uC804\uCCB4 {1}\uAC1C \uCD94\uAC00"
+  itemIcon: {fileID: 7482667652216324306, guid: 4bd4e99f586417f4b9ba8420b162daac, type: 3}
+  baseLevel: 0
+  baseDamage: 4.5
+  baseSpeed: 0
+  baseCount: 4
+  basePer: 0
+  baserateOfFire: 0
+  baserotationSpeed: 200
+  levels: 0100000002000000030000000400000005000000
+  damages:
+  - 0.5
+  - 1
+  - 1.5
+  - 2
+  - 3
+  speeds: []
+  counts: 0100000001000000010000000100000001000000
+  pers: 
+  rateOfFires: []
+  rotationSpeeds: []
+  projectile: {fileID: 2859256769714850956, guid: 1c83bce0195d0f54aafa8c09cd01488a, type: 3}
