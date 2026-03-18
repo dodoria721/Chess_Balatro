@@ -37,54 +37,6 @@ public class InputHandler : MonoBehaviour
         }
     }
 
-    //public void Onclick(InputAction.CallbackContext context)
-    //{
-    //    if (context.started)
-    //    {
-    //        var rayHit = Physics2D.GetRayIntersection(
-    //            _mainCamera.ScreenPointToRay(GetPointerScreenPosition()),
-    //            Mathf.Infinity,
-    //            pieceLayer
-    //        );
-
-    //        if (rayHit.collider != null)
-    //        {
-    //            selectedPiece = rayHit.collider.gameObject;
-    //            draggedPiece = selectedPiece;
-    //            _lastValidPosition = selectedPiece.transform.position;
-    //            dragOffset = selectedPiece.transform.position - GetPointerWorldPosition();
-    //            _hasMoved = false;
-    //        }
-    //        else
-    //        {
-    //            if (selectedPiece != null)
-    //            {
-    //                var tileHit = Physics2D.OverlapPoint(GetPointerWorldPosition(), tileLayer);
-    //                if (tileHit != null)
-    //                {
-    //                    selectedPiece.transform.position = tileHit.transform.position;
-    //                    ClearSelection();
-    //                }
-    //                else
-    //                {
-    //                    ClearSelection();
-    //                }
-    //            }
-    //        }
-    //    }
-    //    else if (context.canceled)
-    //    {
-    //        if (draggedPiece != null)
-    //        {
-    //            if (_hasMoved)
-    //            {
-    //                HandleDrop();
-    //            }
-    //            draggedPiece = null;
-    //        }
-    //    }
-    //}
-
     public void Onclick(InputAction.CallbackContext context)
     {
         if (context.started)
@@ -97,11 +49,14 @@ public class InputHandler : MonoBehaviour
 
             if (rayHit.collider != null)
             {
+                HideValidMoves(); // 새로운 기물을 선택하기 전, 기존 하이라이트를 먼저 끔
+
                 selectedPiece = rayHit.collider.gameObject;
                 draggedPiece = selectedPiece;
                 _lastValidPosition = selectedPiece.transform.position;
                 dragOffset = selectedPiece.transform.position - GetPointerWorldPosition();
                 _hasMoved = false;
+
                 ShowValidMoves(selectedPiece); // 하이라이트 시작
             }
             else
@@ -149,24 +104,6 @@ public class InputHandler : MonoBehaviour
             }
         }
     }
-
-
-    //private void HandleDrop()
-    //{
-    //    float detectionRadius = 0.8f;
-    //    var hit = Physics2D.OverlapCircle(GetPointerWorldPosition(), detectionRadius, tileLayer);
-
-    //    if (hit != null)
-    //    {
-    //        draggedPiece.transform.position = hit.transform.position;
-    //    }
-    //    else
-    //    {
-    //        draggedPiece.transform.position = _lastValidPosition;
-    //    }
-
-    //    ClearSelection();
-    //}
 
     private void HandleDrop()
     {
@@ -226,13 +163,6 @@ public class InputHandler : MonoBehaviour
             tile.SetHighlight(false); // 모든 타일 불 끄기
         }
     }
-
-    //private void ClearSelection()
-    //{
-    //    selectedPiece = null;
-    //    draggedPiece = null;
-    //    _hasMoved = false;
-    //}
     private void ClearSelection()
     {
         HideValidMoves(); // 선택 해제 시 하이라이트 끄기
@@ -241,15 +171,6 @@ public class InputHandler : MonoBehaviour
         _hasMoved = false;
     }
 
-    //마우스와 터치 입력을 통합하여 화면 좌표를 반환
-    //private Vector2 GetPointerScreenPosition()
-    //{
-    //    if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
-    //    {
-    //        return Touchscreen.current.primaryTouch.position.ReadValue();
-    //    }
-    //    return Mouse.current.position.ReadValue();
-    //}
     private Vector2 GetPointerScreenPosition()
     {
         if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
@@ -258,14 +179,6 @@ public class InputHandler : MonoBehaviour
         }
         return Mouse.current.position.ReadValue();
     }
-
-    //화면 좌표를 월드 좌표로 변환
-    //private Vector3 GetPointerWorldPosition()
-    //{
-    //    Vector3 pos = GetPointerScreenPosition();
-    //    pos.z = 10f;
-    //    return _mainCamera.ScreenToWorldPoint(pos);
-    //}
 
     private Vector3 GetPointerWorldPosition()
     {

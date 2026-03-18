@@ -11,8 +11,9 @@ GameObject:
   - component: {fileID: 2393012315412049559}
   - component: {fileID: 7417419254022769048}
   - component: {fileID: 2779461219044622995}
-  m_Layer: 0
-  m_Name: Knite
+  - component: {fileID: 5534776947883937224}
+  m_Layer: 6
+  m_Name: Knight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 430397055749921340}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -444, y: -150, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 128, y: 128, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -78,9 +79,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingLayerID: 23934847
+  m_SortingLayer: 2
+  m_SortingOrder: 10
   m_MaskInteraction: 0
   m_Sprite: {fileID: 4302425814622554904, guid: 663fc024acd29ab4999d795affc28494, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -138,3 +139,17 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.8125, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &5534776947883937224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 430397055749921340}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4493e60322d2f84080aa8f7a713b7e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Knight
+  pieceData: {fileID: 11400000, guid: 6970f1e8b192967498a783b8e7f43f38, type: 2}
+  isFirstMove: 1

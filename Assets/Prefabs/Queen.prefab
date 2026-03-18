@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3751572269284789300}
   - component: {fileID: 6833437533483119400}
   - component: {fileID: 8983451881261276910}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Queen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 8669908162226688906}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 169, y: -160, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 128, y: 128, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -78,9 +78,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingLayerID: 23934847
+  m_SortingLayer: 2
+  m_SortingOrder: 10
   m_MaskInteraction: 0
   m_Sprite: {fileID: -8792212463948841774, guid: 663fc024acd29ab4999d795affc28494, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
