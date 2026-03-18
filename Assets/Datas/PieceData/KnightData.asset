@@ -10,11 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 55794590bf6e30f4a8f286eaa787eb24, type: 3}
-  m_Name: PawnData
+  m_Name: KnightData
   m_EditorClassIdentifier: Assembly-CSharp::PieceScriptableObject
-  pieceName: Pawn
+  pieceName: Knight
   pieceTeam: 0
-  pieceScore: 1
+  pieceScore: 2
   moveDirections:
-  - {x: 0, y: 1}
+  - {x: 1, y: 2}
+  - {x: -1, y: 2}
+  - {x: 2, y: 1}
+  - {x: 2, y: -1}
+  - {x: -2, y: 1}
+  - {x: -2, y: -1}
+  - {x: 1, y: -2}
+  - {x: -1, y: -2}
   isInfinite: 0

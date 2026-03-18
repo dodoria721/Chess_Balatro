@@ -8,7 +8,7 @@ public class BoardManager : MonoBehaviour
     [Header("Board Settings")]
     public int width = 6;
     public int height = 6;
-    public float tileSize = 1f; // 16f¿¡¼­ 1f·Î Á¶Á¤ ±ÇÀå
+    public float tileSize = 1f; // 16fì—ì„œ 1fë¡œ ì¡°ì • ê¶Œì¥
 
     public GameObject tilePrefab;
     public Dictionary<Vector2Int, PieceController> piecePositions = new Dictionary<Vector2Int, PieceController>();
@@ -45,7 +45,7 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    // ¿ùµå ÁÂÇ¥ -> °İÀÚ ÁÂÇ¥ º¯È¯(PieceÀÇ ÃÊ±â ÁÂÇ¥¸¦ ÅëÇØ ÇØ´çÇÏ´Â tileÀÇ À§Ä¡¸¦ ¾Ë±â À§ÇØ)
+    // ì›”ë“œ ì¢Œí‘œ -> ê²©ì ì¢Œí‘œ ë³€í™˜(Pieceì˜ ì´ˆê¸° ì¢Œí‘œë¥¼ í†µí•´ í•´ë‹¹í•˜ëŠ” tileì˜ ìœ„ì¹˜ë¥¼ ì•Œê¸° ìœ„í•´)
     public Vector2Int WorldToGridPos(Vector3 worldPos)
     {
         float startX = -(width * tileSize) / 2f + (tileSize / 2f);
