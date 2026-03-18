@@ -5,7 +5,7 @@ public class Tile : MonoBehaviour
     public Vector2Int gridPos;
     public SpriteRenderer spriteRenderer;
 
-    // »õ·Î Ãß°¡
+    // ìƒˆë¡œ ì¶”ê°€
     private Color _originalColor;
     private bool _isColorSet = false;
 
@@ -18,13 +18,13 @@ public class Tile : MonoBehaviour
         _isColorSet = true;
     }
 
-    // ±âÁ¸ SetColor
+    // ê¸°ì¡´ SetColor
     //public void SetColor(bool isOffset)
     //{
     //    spriteRenderer.color = isOffset ? new Color(0.8f, 0.8f, 0.8f) : Color.white;
     //}
 
-    // »õ·Î Ãß°¡
+    // ìƒˆë¡œ ì¶”ê°€
     public void SetHighlight(bool active)
     {
         if (spriteRenderer == null || !_isColorSet) return;
