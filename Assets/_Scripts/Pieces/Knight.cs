@@ -4,24 +4,10 @@ public class Knight : PieceController
 {
     public override bool IsValidMove(Vector2Int targetPos)
     {
-        Vector2Int diff = targetPos - currentGridPos;
+        // 부모가 "L자 방향인지(diff==dir)"와 "아군이 없는지"를 이미 체크함
+        if (!base.IsValidMove(targetPos)) return false;
 
-        PieceController targetPiece = BoardManager.Instance.GetPieceAt(targetPos);
-
-        if (targetPiece != null)
-        {
-            if (targetPiece.MyTeam == this.MyTeam) return false;
-        }
-
-        if (currentMoveDirections != null)
-        {
-            foreach (Vector2Int dir in currentMoveDirections)
-            {
-                if (diff == dir) return true;
-            }
-        }
-
-
-        return false;
+        // 나이트는 사이 경로를 검사할 필요가 없으므로 여기서 바로 true
+        return true;
     }
 }
