@@ -29,27 +29,47 @@ public class PieceController : MonoBehaviour
     {
         if (BoardManager.Instance != null)
         {
+            // 1. 현재 월드 좌표로 실제 격자 좌표를 먼저 구함
             Vector2Int detectedPos = BoardManager.Instance.WorldToGridPos(transform.position);
-            BoardManager.Instance.UpdatePiecePosition(currentGridPos, detectedPos, this);
+
+            // 2. 내 변수를 먼저 업데이트
+            Vector2Int oldPos = currentGridPos; // 초기값은 보통 (0,0) 혹은 에디터 설정값
             currentGridPos = detectedPos;
+
+            // 3. 그 다음 보드 매니저에 나 여기 있다고 신고
+            BoardManager.Instance.UpdatePiecePosition(oldPos, currentGridPos, this);
         }
     }
 
     // 해당 타일에 접근 가능한지?
     public virtual bool IsValidMove(Vector2Int targetPos)
     {
-        if (targetPos == currentGridPos) return false; // 가고자 하는 곳과 내가 있는 곳이 같다 -> 이동할 수 없다.
-        Vector2Int diff = targetPos - currentGridPos; // 가고자 하는 곳과 내가 있는 곳의 차, 갈 수 있는 곳인지 체크 하기 위한 값
+        // 1. 보드 범위 밖이거나 제자리 이동 체크
+        if (targetPos.x < 0 || targetPos.x >= BoardManager.Instance.width ||
+            targetPos.y < 0 || targetPos.y >= BoardManager.Instance.height) return false;
+        if (targetPos == currentGridPos) return false;
 
+        // 2. 도착지에 아군 기물이 있는지 체크
+        PieceController targetPiece = BoardManager.Instance.GetPieceAt(targetPos);
+        if (targetPiece != null && targetPiece.MyTeam == this.MyTeam) return false;
+
+        // 3. IsInfinity 체크 (기본 이동 궤적 확인)
+        Vector2Int diff = targetPos - currentGridPos;
+        bool isStepValid = false;
         foreach (Vector2Int dir in currentMoveDirections)
         {
-            if (currentIsInfinity) // 무한이 이동가능한 기물(퀸, 비숍, 룩)
+            if (currentIsInfinity)
             {
-                if (IsMovingInDirection(diff, dir)) return true; // 가고자 하는 벡터값과, 갈 수 있는 벡터 값이 같다 -> 이동할 수 있다.
+                if (IsMovingInDirection(diff, dir)) { isStepValid = true; break; }
             }
-            else if (diff == dir) return true; // 칸 이 정해져 있는 기물(킹, 나이트, 폰)
+            else
+            {
+                // 기본적으로 단거리 기물은 지정된 벡터와 정확히 일치해야 함
+                if (diff == dir) { isStepValid = true; break; }
+            }
         }
-        return false;
+
+        return isStepValid;
     }
 
     // (킹, 비숍, 룩)의 가고자 하는 방향을 체크 하는 함수
@@ -60,6 +80,27 @@ public class PieceController : MonoBehaviour
         if (dir.x != 0 && dir.y != 0 && Mathf.Abs(diff.x) == Mathf.Abs(diff.y) &&                            // 대각선 이동 체크
             Mathf.Sign(diff.x) == Mathf.Sign(dir.x) && Mathf.Sign(diff.y) == Mathf.Sign(dir.y)) return true;
         return false;
+    }
+
+    protected bool IsPathClear(Vector2Int targetPos)
+    {
+        Vector2Int diff = targetPos - currentGridPos;
+
+        Vector2Int direction = new Vector2Int(
+            diff.x == 0 ? 0 : (int)Mathf.Sign(diff.x),
+            diff.y == 0 ? 0 : (int)Mathf.Sign(diff.y)
+            );
+
+        Vector2Int checkPos = currentGridPos + direction;
+
+        while (checkPos != targetPos)
+        {
+            if (BoardManager.Instance.GetPieceAt(checkPos) != null) return false;
+
+            checkPos += direction;
+        }
+
+        return true;
     }
 
     public virtual void OnMoveConfirmed(Vector2Int targetPos)
