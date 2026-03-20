@@ -17,6 +17,10 @@ public class PieceScriptableObject : ScriptableObject
     float pieceScore;
     public float PieceScore { get => pieceScore; private set => pieceScore = value; }
 
+    [SerializeField, TextArea(3, 5)] //�⹰ ������ ����
+    string description;
+    public string Description { get => description; private set => description = value; }
+
 
     [Header("Movement Settings")]
     [SerializeField]
