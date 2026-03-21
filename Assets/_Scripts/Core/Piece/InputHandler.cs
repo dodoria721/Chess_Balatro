@@ -4,25 +4,23 @@ using UnityEngine.InputSystem;
 public class InputHandler : MonoBehaviour
 {
     private Camera _mainCamera;
-
-    private GameObject selectedPiece; // 현재 선택되어 있는 기물(클릭 이동용)
-    private GameObject draggedPiece;  // 현재 드래그 중인 기물(드래그 이동용)
-
+    private GameObject selectedPiece;
+    private GameObject draggedPiece;
     private Vector3 dragOffset;
     private Vector3 _lastValidPosition;
     private bool _hasMoved;
 
     [Header("Layer Masks")]
-    [SerializeField] private LayerMask pieceLayer; // 기물 레이어 (Inspector에서 Piece 레이어 선택)
-    [SerializeField] private LayerMask tileLayer;  // 타일 레이어 (Inspector에서 Tile 레이어 선택)
+    [SerializeField] private LayerMask pieceLayer;
+    [SerializeField] private LayerMask tileLayer;
 
-    private void Awake()
-    {
-        _mainCamera = Camera.main;
-    }
+    private void Awake() => _mainCamera = Camera.main;
 
     private void Update()
     {
+        // 플레이어 턴이 아니면 조작 차단
+        if (TurnManager.Instance.currentState != GameState.PlayerTurn) return;
+
         if (draggedPiece != null)
         {
             Vector3 pointerPos = GetPointerWorldPosition();
@@ -39,70 +37,58 @@ public class InputHandler : MonoBehaviour
 
     public void Onclick(InputAction.CallbackContext context)
     {
+        if (TurnManager.Instance.currentState != GameState.PlayerTurn) return;
+
         if (context.started)
         {
-            var rayHit = Physics2D.GetRayIntersection(
-                _mainCamera.ScreenPointToRay(GetPointerScreenPosition()),
-                Mathf.Infinity,
-                pieceLayer
-            );
+            var rayHit = Physics2D.GetRayIntersection(_mainCamera.ScreenPointToRay(GetPointerScreenPosition()), Mathf.Infinity, pieceLayer);
 
             if (rayHit.collider != null)
             {
-                HideValidMoves(); // 새로운 기물을 선택하기 전, 기존 하이라이트를 먼저 끔
-
-                selectedPiece = rayHit.collider.gameObject;
-                draggedPiece = selectedPiece;
-                _lastValidPosition = selectedPiece.transform.position;
-                dragOffset = selectedPiece.transform.position - GetPointerWorldPosition();
-                _hasMoved = false;
-
-                ShowValidMoves(selectedPiece); // 하이라이트 시작
-            }
-            else
-            {
-                if (selectedPiece != null)
+                // 내 기물(White)일 때만 선택
+                if (rayHit.collider.TryGetComponent(out PieceController piece) && piece.MyTeam == Team.White)
                 {
-                    // 클릭으로 이동 시도 시 타일 감지
-                    var tileHit = Physics2D.OverlapPoint(GetPointerWorldPosition(), tileLayer);
-                    if (tileHit != null && tileHit.TryGetComponent(out Tile targetTile))
-                    {
-                        // === [검증 로직 추가] ===
-                        if (selectedPiece.TryGetComponent(out PieceController controller))
-                        {
-                            if (controller.IsValidMove(targetTile.gridPos))
-                            {
-                                selectedPiece.transform.position = tileHit.transform.position;
-                                controller.OnMoveConfirmed(targetTile.gridPos); // 상태 업데이트
-                                ClearSelection();
-                            }
-                            else
-                            {
-                                // 규칙에 맞지 않으면 선택만 해제 (혹은 유지)
-                                ClearSelection();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        ClearSelection();
-                    }
+                    HideValidMoves();
+                    selectedPiece = rayHit.collider.gameObject;
+                    draggedPiece = selectedPiece;
+                    _lastValidPosition = selectedPiece.transform.position;
+                    dragOffset = selectedPiece.transform.position - GetPointerWorldPosition();
+                    _hasMoved = false;
+                    ShowValidMoves(selectedPiece);
                 }
             }
+            else if (selectedPiece != null)
+            {
+                // 클릭 이동 시도
+                AttemptMove(GetPointerWorldPosition());
+            }
         }
-        else if (context.canceled)
+        else if (context.canceled && draggedPiece != null)
         {
-            if (draggedPiece != null)
+            if (_hasMoved) HandleDrop();
+            draggedPiece = null;
+        }
+    }
+
+    private void AttemptMove(Vector3 worldPos)
+    {
+        var tileHit = Physics2D.OverlapPoint(worldPos, tileLayer);
+        if (tileHit != null && tileHit.TryGetComponent(out Tile targetTile))
+        {
+            if (selectedPiece.TryGetComponent(out PieceController controller))
             {
-                if (_hasMoved)
+                // 규칙 확인 및 AP 1 이상 있는지 확인
+                if (controller.IsValidMove(targetTile.gridPos) && TurnManager.Instance.currentAP > 0)
                 {
-                    HandleDrop();
+                    if (TurnManager.Instance.TryUseAP(1))
+                    {
+                        selectedPiece.transform.position = tileHit.transform.position;
+                        controller.OnMoveConfirmed(targetTile.gridPos);
+                    }
                 }
-                // 드래그가 끝났을 때 draggedPiece는 null로 만들지만, 
-                // 클릭 이동을 위해 selectedPiece는 HandleDrop 내부에서 상황에 따라 처리됩니다.
-                draggedPiece = null;
             }
         }
+        ClearSelection();
     }
 
     private void HandleDrop()
@@ -110,47 +96,32 @@ public class InputHandler : MonoBehaviour
         float detectionRadius = 0.8f;
         var hit = Physics2D.OverlapCircle(GetPointerWorldPosition(), detectionRadius, tileLayer);
 
-        // === [드래그 드롭 검증 로직 적용] ===
-        if (hit != null && hit.TryGetComponent(out Tile targetTile))
+        if (hit != null && hit.TryGetComponent(out Tile targetTile) && draggedPiece.TryGetComponent(out PieceController controller))
         {
-            if (draggedPiece.TryGetComponent(out PieceController controller))
+            if (controller.IsValidMove(targetTile.gridPos) && TurnManager.Instance.currentAP > 0)
             {
-                // 기물에게 이 타일로 갈 수 있는지 물어봄
-                if (controller.IsValidMove(targetTile.gridPos))
+                if (TurnManager.Instance.TryUseAP(1))
                 {
                     draggedPiece.transform.position = hit.transform.position;
-                    controller.OnMoveConfirmed(targetTile.gridPos); // 상태 업데이트(isFirstMove 등)
-                }
-                else
-                {
-                    // 규칙 위반 시 원래 자리로 복귀
-                    draggedPiece.transform.position = _lastValidPosition;
+                    controller.OnMoveConfirmed(targetTile.gridPos);
+                    ClearSelection();
+                    return;
                 }
             }
         }
-        else
-        {
-            // 타일이 없는 곳에 놓으면 복귀
-            draggedPiece.transform.position = _lastValidPosition;
-        }
-
+        draggedPiece.transform.position = _lastValidPosition;
         ClearSelection();
     }
+
     private void ShowValidMoves(GameObject piece)
     {
+        if (TurnManager.Instance.currentAP <= 0) return; // AP 없으면 하이라이트 안 함
         if (piece.TryGetComponent(out PieceController controller))
         {
-            // 씬에 있는 모든 타일을 찾습니다. 
-            // (성능을 위해 보드매니저에 타일 리스트를 만들어두고 쓰는 게 더 좋지만, 일단 디버깅용으로 작성합니다.)
             Tile[] allTiles = FindObjectsByType<Tile>(FindObjectsSortMode.None);
-
             foreach (Tile tile in allTiles)
             {
-                // 기물의 이동 규칙에 맞는지 확인
-                if (controller.IsValidMove(tile.gridPos))
-                {
-                    tile.SetHighlight(true); // 갈 수 있는 곳이면 불 켜기
-                }
+                if (controller.IsValidMove(tile.gridPos)) tile.SetHighlight(true);
             }
         }
     }
@@ -158,32 +129,17 @@ public class InputHandler : MonoBehaviour
     private void HideValidMoves()
     {
         Tile[] allTiles = FindObjectsByType<Tile>(FindObjectsSortMode.None);
-        foreach (Tile tile in allTiles)
-        {
-            tile.SetHighlight(false); // 모든 타일 불 끄기
-        }
+        foreach (Tile tile in allTiles) tile.SetHighlight(false);
     }
+
     private void ClearSelection()
     {
-        HideValidMoves(); // 선택 해제 시 하이라이트 끄기
+        HideValidMoves();
         selectedPiece = null;
         draggedPiece = null;
         _hasMoved = false;
     }
 
-    private Vector2 GetPointerScreenPosition()
-    {
-        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
-        {
-            return Touchscreen.current.primaryTouch.position.ReadValue();
-        }
-        return Mouse.current.position.ReadValue();
-    }
-
-    private Vector3 GetPointerWorldPosition()
-    {
-        Vector3 pos = GetPointerScreenPosition();
-        pos.z = 10f;
-        return _mainCamera.ScreenToWorldPoint(pos);
-    }
+    private Vector2 GetPointerScreenPosition() => Mouse.current.position.ReadValue();
+    private Vector3 GetPointerWorldPosition() { Vector3 pos = GetPointerScreenPosition(); pos.z = 10f; return _mainCamera.ScreenToWorldPoint(pos); }
 }

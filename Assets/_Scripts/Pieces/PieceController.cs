@@ -110,4 +110,6 @@ public class PieceController : MonoBehaviour
         currentGridPos = targetPos;
         isFirstMove = false;
     }
+
+    public Vector2Int GetCurrentGridPos() => currentGridPos;
 }
