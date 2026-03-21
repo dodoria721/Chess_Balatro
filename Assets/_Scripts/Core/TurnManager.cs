@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using TMPro; // UI 표시를 위해 필요
 
 public enum GameState { PlayerTurn, EnemyTurn, Busy }
 
@@ -10,65 +9,73 @@ public class TurnManager : MonoBehaviour
     public GameState currentState { get; private set; }
 
     [Header("AP Settings")]
-    public int maxAP = 3;      // 턴당 최대 행동력
+    public int maxAP = 3;
     public int currentAP { get; private set; }
-
-    [Header("UI Settings")]
-    [SerializeField] private TextMeshProUGUI apText; // Inspector에서 Text 오브젝트 연결
 
     [SerializeField] private EnemyAIManager enemyAI;
 
-    void Awake()
+    private void Awake()
     {
         if (Instance == null) Instance = this;
         currentState = GameState.PlayerTurn;
         currentAP = maxAP;
-        UpdateAPUI();
     }
 
-    // 기물 이동 시 호출하여 AP 소비
+    private void Start()
+    {
+        RelicManager.Instance?.ExecuteRelicEffects(RelicTriggerType.OnTurnStart);
+        InGameUIManager.Instance?.RefreshAP(currentAP, maxAP, true);
+    }
+
     public bool TryUseAP(int amount)
     {
         if (currentAP >= amount)
         {
             currentAP -= amount;
-            UpdateAPUI();
-            Debug.Log($"AP 소비! 남은 AP: {currentAP}");
+            InGameUIManager.Instance?.RefreshAP(currentAP, maxAP, false);
             return true;
         }
-        Debug.Log("행동력이 부족합니다.");
         return false;
     }
 
-    // UI 버튼(Turn End)에 연결할 함수
     public void OnTurnEndButtonClicked()
     {
         if (currentState == GameState.PlayerTurn)
-        {
             StartCoroutine(SwitchToEnemyTurn());
-        }
     }
 
     private IEnumerator SwitchToEnemyTurn()
     {
         currentState = GameState.Busy;
+        InGameUIManager.Instance?.SetTurnEndButtonInteractable(false);
+
+        // 1. 플레이어 턴 종료 시 발동하는 유물 효과 (계산 전)
+        RelicManager.Instance?.ExecuteRelicEffects(RelicTriggerType.OnTurnEnd);
         yield return new WaitForSeconds(0.3f);
 
+        // 2. 적의 차례 진행 (여기서 내 기물이 파괴될 수 있음)
         currentState = GameState.EnemyTurn;
         yield return StartCoroutine(enemyAI.PlayTurn());
 
-        // 다시 플레이어 턴으로 복귀 시 AP 회복
+        // 3. [위치 변경] 적의 모든 행동이 끝난 후 최종 보드 상태로 점수 산출
+        if (RelicManager.Instance != null)
+        {
+            RelicManager.Instance.CalculateAndAccumulateTurnScore();
+        }
+
+        // 4. 다시 플레이어 턴으로 복귀 준비
         currentAP = maxAP;
-        UpdateAPUI();
+        RelicManager.Instance?.ExecuteRelicEffects(RelicTriggerType.OnTurnStart);
+
+        InGameUIManager.Instance?.RefreshAP(currentAP, maxAP, true);
+        InGameUIManager.Instance?.SetTurnEndButtonInteractable(true);
+
         currentState = GameState.PlayerTurn;
-        Debug.Log("플레이어 턴 시작! AP가 충전되었습니다.");
     }
 
-    private void UpdateAPUI()
+    public void AddCurrentAP(int amount)
     {
-        if (apText != null)
-        {
-            apText.text = $"AP: {currentAP} / {maxAP}";
-        }
+        currentAP += amount;
+        InGameUIManager.Instance?.RefreshAP(currentAP, maxAP, false);
     }
 }
