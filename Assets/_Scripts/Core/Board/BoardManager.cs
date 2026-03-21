@@ -63,4 +63,11 @@ public class BoardManager : MonoBehaviour
         if (piecePositions.ContainsKey(oldPos) && piecePositions[oldPos] == piece) piecePositions.Remove(oldPos);
         piecePositions[newPos] = piece;
     }
+
+    public Vector3 GetTileWorldPos(Vector2Int gridPos)
+    {
+        float startX = -(width * tileSize) / 2f + (tileSize / 2f);
+        float startY = -(height * tileSize) / 2f + (tileSize / 2f);
+        return new Vector3(startX + (gridPos.x * tileSize), startY + (gridPos.y * tileSize), 0);
+    }
 }
