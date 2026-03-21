@@ -4,12 +4,12 @@ public class King : PieceController
 {
     public override bool IsValidMove(Vector2Int targetPos)
     {
-        // 1. 부모가 거리(1칸)와 방향을 이미 체크함
+        // 1. 기본 방향 및 아군 체크
         if (!base.IsValidMove(targetPos)) return false;
 
-        // 2. 도착지 기물 체크만 하면 끝 (한 칸 이동이라 중간 경로 체크 불필요)
-        PieceController targetPiece = BoardManager.Instance.GetPieceAt(targetPos);
-        if (targetPiece != null) return targetPiece.MyTeam != this.MyTeam;
+        // 2. 킹은 거리(절댓값 차이)가 1 이하여야 함 (대각선 포함)
+        Vector2Int diff = targetPos - currentGridPos;
+        if (Mathf.Abs(diff.x) > 1 || Mathf.Abs(diff.y) > 1) return false;
 
         return true;
     }

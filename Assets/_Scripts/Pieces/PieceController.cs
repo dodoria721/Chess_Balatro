@@ -103,12 +103,18 @@ public class PieceController : MonoBehaviour
         return true;
     }
 
-    public virtual void OnMoveConfirmed(Vector2Int targetPos)
+    public virtual void OnMoveConfirmed(Vector2Int newPos)
     {
         Vector2Int oldPos = currentGridPos;
-        BoardManager.Instance.UpdatePiecePosition(currentGridPos, targetPos, this);
-        currentGridPos = targetPos;
-        isFirstMove = false;
+        currentGridPos = newPos;
+
+        // 보드 데이터 갱신
+        BoardManager.Instance.UpdatePiecePosition(oldPos, newPos, this);
+
+        // [추가] 이동이 확인되었으므로 첫 이동 체크 해제
+        if (isFirstMove) isFirstMove = false;
+
+        // Debug.Log($"{currentPiecetName} 이동 완료: {newPos}");
     }
 
     public Vector2Int GetCurrentGridPos() => currentGridPos;
