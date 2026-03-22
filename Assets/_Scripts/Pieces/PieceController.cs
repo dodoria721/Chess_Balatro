@@ -11,7 +11,9 @@ public class PieceController : MonoBehaviour
     protected float currentPieceScore;
     protected Vector2Int[] currentMoveDirections; // 기물이 이동할 수 있는 방향 벡터를 담은 배열
     protected bool currentIsInfinity; // 기물이 보드 끝까지 가는지 체크(퀸, 비숍, 룩)
+    public bool hasMovedThisTurn = false; // 이번 턴 이동 여부
     public Team MyTeam { get; private set; }
+    public Vector2Int PreviousPos { get; private set; } // [추가] 이전 위치 저장용
 
     void Awake()
     {
@@ -104,18 +106,18 @@ public class PieceController : MonoBehaviour
         return true;
     }
 
-    public virtual void OnMoveConfirmed(Vector2Int newPos)
+    public void OnMoveConfirmed(Vector2Int newPos)
     {
+        PreviousPos = currentGridPos;
+
         Vector2Int oldPos = currentGridPos;
+        BoardManager.Instance.UpdatePiecePosition(oldPos, newPos, this);
         currentGridPos = newPos;
 
-        // 보드 데이터 갱신
-        BoardManager.Instance.UpdatePiecePosition(oldPos, newPos, this);
-
-        // [추가] 이동이 확인되었으므로 첫 이동 체크 해제
         if (isFirstMove) isFirstMove = false;
 
-        // Debug.Log($"{currentPiecetName} 이동 완료: {newPos}");
+        // 이동했음을 기록
+        hasMovedThisTurn = true;
     }
 
     public Vector2Int CurrentPos => currentGridPos;
@@ -153,4 +155,5 @@ public class PieceController : MonoBehaviour
         return pos.x >= 0 && pos.x < BoardManager.Instance.width &&
                pos.y >= 0 && pos.y < BoardManager.Instance.height;
     }
+
 }

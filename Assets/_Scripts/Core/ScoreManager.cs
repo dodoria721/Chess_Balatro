@@ -1,5 +1,6 @@
-using UnityEngine;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 public class ScoreManager : MonoBehaviour
 {
@@ -14,32 +15,32 @@ public class ScoreManager : MonoBehaviour
         if (Instance == null) Instance = this;
     }
 
-    public void CalculateTurnScore()
+    public void CalculateTurnScore(List<PieceController> movedPieces)
     {
-        // 1. 보드 기물 기본 점수 (BoardManager에서 가져옴)
+        // 1. 보드 위의 아군 기물 기본 점수 합산
         float boardSum = BoardManager.Instance.piecePositions.Values
             .Where(p => p != null && p.MyTeam == Team.White)
             .Sum(p => p.pieceData.PieceScore);
 
-        // 2. 전술 매니저 보너스 (TacticManager에서 가져옴)
-        var tactic = TacticManager.Instance.GetCurrentTacticBonus();
-
-        // 3. 유물 매니저 보너스 (RelicManager에서 가져옴)
+        // 2. 전술 및 유물 보너스 가져오기
+        var tactic = TacticManager.Instance.GetCurrentTacticBonus(movedPieces);
         var relic = RelicManager.Instance.GetRelicScoreBonus();
 
-        // 4. 공식 적용: (기물 합 + 전술 점수 + a + 유물 점수) * (전술 배수 + 유물 배수)
+        // 3. 공식에 따른 최종 점수 계산
         float totalPlus = boardSum + tactic.scoreSum + alphaValue + relic.scoreSum;
-        float totalMult = tactic.multSum + relic.multSum;
+        float totalMult = Mathf.Max(1f, tactic.multSum + relic.multSum);
 
-        // 배수 보정 (0배 방지)
-        if (totalMult <= 0) totalMult = 1f;
+        float finalScore = totalPlus * totalMult;
 
-        float turnScore = totalPlus * totalMult;
+        // 4. 누적 점수에 합산
+        _totalAccumulatedScore += finalScore;
 
-        // 5. 누적 및 UI 반영
-        _totalAccumulatedScore += turnScore;
-        InGameUIManager.Instance?.RefreshScore(_totalAccumulatedScore);
+        // [핵심 추가] UI 매니저에게 계산된 누적 점수를 전달하여 화면을 갱신합니다.
+        if (InGameUIManager.Instance != null)
+        {
+            InGameUIManager.Instance.RefreshScore(_totalAccumulatedScore);
+        }
 
-        Debug.Log($"[Score] 턴 점수: {turnScore} | 총점: {_totalAccumulatedScore}");
+        Debug.Log($"<color=white>최종 점수: {finalScore} (누적 합계: {_totalAccumulatedScore})</color>");
     }
 }

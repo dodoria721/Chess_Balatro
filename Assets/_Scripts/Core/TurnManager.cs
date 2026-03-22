@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public enum GameState { PlayerTurn, EnemyTurn, Busy }
 
@@ -14,6 +15,9 @@ public class TurnManager : MonoBehaviour
 
     [SerializeField] private EnemyAIManager enemyAI;
 
+    // 이번 턴에 이동한 기물을 추적하여 TacticManager에 전달하기 위함
+    private List<PieceController> movedPiecesThisTurn = new List<PieceController>();
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -23,9 +27,22 @@ public class TurnManager : MonoBehaviour
 
     private void Start()
     {
-        // 턴 시작 유물 효과 실행
         RelicManager.Instance?.ExecuteRelicEffects(RelicTriggerType.OnTurnStart);
         InGameUIManager.Instance?.RefreshAP(currentAP, maxAP, true);
+    }
+
+    // [중요] RelicManager에서 호출하는 함수
+    public void AddCurrentAP(int amount)
+    {
+        currentAP += amount;
+        // UI 업데이트도 함께 수행
+        InGameUIManager.Instance?.RefreshAP(currentAP, maxAP, false);
+    }
+
+    public void RecordMovement(PieceController piece)
+    {
+        if (!movedPiecesThisTurn.Contains(piece))
+            movedPiecesThisTurn.Add(piece);
     }
 
     public bool TryUseAP(int amount)
@@ -41,44 +58,40 @@ public class TurnManager : MonoBehaviour
 
     public void OnTurnEndButtonClicked()
     {
-        // 플레이어 턴일 때만 종료 버튼 작동
         if (currentState == GameState.PlayerTurn)
-            StartCoroutine(SwitchToEnemyTurn());
+            StartCoroutine(FinalizePlayerTurn());
     }
 
-    private IEnumerator SwitchToEnemyTurn()
+    private IEnumerator FinalizePlayerTurn()
     {
         currentState = GameState.Busy;
         InGameUIManager.Instance?.SetTurnEndButtonInteractable(false);
 
-        // 1. 플레이어 턴 종료 시 발동하는 유물 효과 (계산 전)
-        RelicManager.Instance?.ExecuteRelicEffects(RelicTriggerType.OnTurnEnd);
-        yield return new WaitForSeconds(0.3f);
-
-        // 2. 적의 차례 진행 (여기서 내 기물이 파괴될 수 있음)
-        currentState = GameState.EnemyTurn;
-        yield return StartCoroutine(enemyAI.PlayTurn());
+        Debug.Log("<color=yellow>--- 플레이어 턴 종료: 점수 정산 시작 ---</color>");
 
         if (ScoreManager.Instance != null)
         {
-            ScoreManager.Instance.CalculateTurnScore();
+            // 이동한 기물 리스트를 넘겨줌
+            ScoreManager.Instance.CalculateTurnScore(movedPiecesThisTurn);
         }
 
-        // 4. 다시 플레이어 턴으로 복귀 준비
+        yield return new WaitForSeconds(0.7f);
+
+        RelicManager.Instance?.ExecuteRelicEffects(RelicTriggerType.OnTurnEnd);
+        yield return new WaitForSeconds(0.3f);
+
+        currentState = GameState.EnemyTurn;
+        yield return StartCoroutine(enemyAI.PlayTurn());
+
+        // 다음 턴 준비
         currentAP = maxAP;
+        movedPiecesThisTurn.Clear(); // 이동 기록 초기화
 
-        // 새 턴 시작 시 유물 효과 (예: 추가 AP 등)
         RelicManager.Instance?.ExecuteRelicEffects(RelicTriggerType.OnTurnStart);
-
         InGameUIManager.Instance?.RefreshAP(currentAP, maxAP, true);
         InGameUIManager.Instance?.SetTurnEndButtonInteractable(true);
 
         currentState = GameState.PlayerTurn;
-    }
-
-    public void AddCurrentAP(int amount)
-    {
-        currentAP += amount;
-        InGameUIManager.Instance?.RefreshAP(currentAP, maxAP, false);
+        Debug.Log("<color=green>--- 새로운 플레이어 턴 시작 ---</color>");
     }
 }
