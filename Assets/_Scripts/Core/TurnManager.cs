@@ -23,6 +23,7 @@ public class TurnManager : MonoBehaviour
 
     private void Start()
     {
+        // 턴 시작 유물 효과 실행
         RelicManager.Instance?.ExecuteRelicEffects(RelicTriggerType.OnTurnStart);
         InGameUIManager.Instance?.RefreshAP(currentAP, maxAP, true);
     }
@@ -40,6 +41,7 @@ public class TurnManager : MonoBehaviour
 
     public void OnTurnEndButtonClicked()
     {
+        // 플레이어 턴일 때만 종료 버튼 작동
         if (currentState == GameState.PlayerTurn)
             StartCoroutine(SwitchToEnemyTurn());
     }
@@ -57,14 +59,15 @@ public class TurnManager : MonoBehaviour
         currentState = GameState.EnemyTurn;
         yield return StartCoroutine(enemyAI.PlayTurn());
 
-        // 3. [위치 변경] 적의 모든 행동이 끝난 후 최종 보드 상태로 점수 산출
-        if (RelicManager.Instance != null)
+        if (ScoreManager.Instance != null)
         {
-            RelicManager.Instance.CalculateAndAccumulateTurnScore();
+            ScoreManager.Instance.CalculateTurnScore();
         }
 
         // 4. 다시 플레이어 턴으로 복귀 준비
         currentAP = maxAP;
+
+        // 새 턴 시작 시 유물 효과 (예: 추가 AP 등)
         RelicManager.Instance?.ExecuteRelicEffects(RelicTriggerType.OnTurnStart);
 
         InGameUIManager.Instance?.RefreshAP(currentAP, maxAP, true);

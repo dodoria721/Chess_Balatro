@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PieceController : MonoBehaviour
@@ -117,5 +118,39 @@ public class PieceController : MonoBehaviour
         // Debug.Log($"{currentPiecetName} 이동 완료: {newPos}");
     }
 
-    public Vector2Int GetCurrentGridPos() => currentGridPos;
+    public Vector2Int CurrentPos => currentGridPos;
+
+    public List<Vector2Int> GetAttackRange()
+    {
+        List<Vector2Int> range = new List<Vector2Int>();
+        if (currentMoveDirections == null) return range;
+
+        foreach (var dir in currentMoveDirections)
+        {
+            if (currentIsInfinity) // 룩, 비숍, 퀸
+            {
+                for (int i = 1; i < Mathf.Max(BoardManager.Instance.width, BoardManager.Instance.height); i++)
+                {
+                    Vector2Int targetPos = currentGridPos + (dir * i);
+                    if (!IsWithinBoard(targetPos)) break;
+
+                    range.Add(targetPos);
+                    // 기물이 있으면 그 뒤는 공격 불가 (핀/스큐어 판정을 위해 좌표는 추가하고 루프만 종료)
+                    if (BoardManager.Instance.GetPieceAt(targetPos) != null) break;
+                }
+            }
+            else // 폰, 나이트, 킹
+            {
+                Vector2Int targetPos = currentGridPos + dir;
+                if (IsWithinBoard(targetPos)) range.Add(targetPos);
+            }
+        }
+        return range;
+    }
+
+    private bool IsWithinBoard(Vector2Int pos)
+    {
+        return pos.x >= 0 && pos.x < BoardManager.Instance.width &&
+               pos.y >= 0 && pos.y < BoardManager.Instance.height;
+    }
 }

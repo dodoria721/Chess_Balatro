@@ -2,7 +2,7 @@ using UnityEngine;
 
 public enum Team { White, Black, Neutral} // 아군, 적, 중립(혹시 몰라 추가)
 
-[CreateAssetMenu(fileName = "PieceScriptableObject", menuName = "Scriptable Objects/PieceScriptableObject")]
+[CreateAssetMenu(fileName = "PieceData", menuName = "Scriptable Objects/PieceScriptableObject")]
 public class PieceScriptableObject : ScriptableObject
 {
     [SerializeField]
@@ -17,7 +17,7 @@ public class PieceScriptableObject : ScriptableObject
     float pieceScore;
     public float PieceScore { get => pieceScore; private set => pieceScore = value; }
 
-    [SerializeField, TextArea(3, 5)] //�⹰ ������ ����
+    [SerializeField, TextArea(3, 5)]
     string description;
     public string Description { get => description; private set => description = value; }
 
