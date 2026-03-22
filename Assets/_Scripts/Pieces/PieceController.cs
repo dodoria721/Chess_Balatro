@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PieceController : MonoBehaviour
@@ -103,13 +104,53 @@ public class PieceController : MonoBehaviour
         return true;
     }
 
-    public virtual void OnMoveConfirmed(Vector2Int targetPos)
+    public virtual void OnMoveConfirmed(Vector2Int newPos)
     {
         Vector2Int oldPos = currentGridPos;
-        BoardManager.Instance.UpdatePiecePosition(currentGridPos, targetPos, this);
-        currentGridPos = targetPos;
-        isFirstMove = false;
+        currentGridPos = newPos;
+
+        // 보드 데이터 갱신
+        BoardManager.Instance.UpdatePiecePosition(oldPos, newPos, this);
+
+        // [추가] 이동이 확인되었으므로 첫 이동 체크 해제
+        if (isFirstMove) isFirstMove = false;
+
+        // Debug.Log($"{currentPiecetName} 이동 완료: {newPos}");
     }
 
-    public Vector2Int GetCurrentGridPos() => currentGridPos;
+    public Vector2Int CurrentPos => currentGridPos;
+
+    public List<Vector2Int> GetAttackRange()
+    {
+        List<Vector2Int> range = new List<Vector2Int>();
+        if (currentMoveDirections == null) return range;
+
+        foreach (var dir in currentMoveDirections)
+        {
+            if (currentIsInfinity) // 룩, 비숍, 퀸
+            {
+                for (int i = 1; i < Mathf.Max(BoardManager.Instance.width, BoardManager.Instance.height); i++)
+                {
+                    Vector2Int targetPos = currentGridPos + (dir * i);
+                    if (!IsWithinBoard(targetPos)) break;
+
+                    range.Add(targetPos);
+                    // 기물이 있으면 그 뒤는 공격 불가 (핀/스큐어 판정을 위해 좌표는 추가하고 루프만 종료)
+                    if (BoardManager.Instance.GetPieceAt(targetPos) != null) break;
+                }
+            }
+            else // 폰, 나이트, 킹
+            {
+                Vector2Int targetPos = currentGridPos + dir;
+                if (IsWithinBoard(targetPos)) range.Add(targetPos);
+            }
+        }
+        return range;
+    }
+
+    private bool IsWithinBoard(Vector2Int pos)
+    {
+        return pos.x >= 0 && pos.x < BoardManager.Instance.width &&
+               pos.y >= 0 && pos.y < BoardManager.Instance.height;
+    }
 }
