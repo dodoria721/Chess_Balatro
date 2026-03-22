@@ -104,6 +104,9 @@ public class InputHandler : MonoBehaviour
                 {
                     draggedPiece.transform.position = hit.transform.position;
                     controller.OnMoveConfirmed(targetTile.gridPos);
+
+                    TurnManager.Instance.RecordMovement(controller);
+
                     ClearSelection();
                     return;
                 }
